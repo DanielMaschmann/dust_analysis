@@ -14,6 +14,7 @@ from astropy.wcs.utils import fit_wcs_from_points
 file_name_tol_1924_416_muse = '/home/benutzer/data/observation/heII_paper/tol1924_416/muse/ADP.2017-03-23T15 16 34.777.fits'
 hdu_muse = fits.open(file_name_tol_1924_416_muse)
 head_muse = hdu_muse[1].header
+print(head_muse)
 wcs_muse = WCS(head_muse)
 cube_muse = hdu_muse[1].data   # cube.shape = (3681, nx, ny)
 npix_muse = cube_muse.shape[0]

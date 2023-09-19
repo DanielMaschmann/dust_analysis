@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 from specutils.manipulation import gaussian_smooth
 
 
-path = '/home/benutzer/Documents/projects/dust_analysis/heII/data/extracted_spec'
-meta_df = pd.read_csv('/home/benutzer/Documents/projects/dust_analysis/heII/data/extracted_spec/s1x_id_databaseA.csv'
+path = '/home/benutzer/Documents/projects/dust_analysis_old/heII/data/extracted_spec'
+meta_df = pd.read_csv('/home/benutzer/Documents/projects/dust_analysis_old/heII/data/extracted_spec/s1x_id_databaseA.csv'
                       ).set_index(['target_name', 'filters'])
 targets = [tmp[0] for tmp in meta_df.index.to_numpy()[::3]]
 
@@ -62,7 +62,7 @@ def smooth(array, npix=4):
 
 ## optical fitting windows
 span = [4000, 5500]
-emlines=pd.read_csv('/home/benutzer/Documents/projects/dust_analysis/uv spectral analysis/scripts/emlins.csv')
+emlines=pd.read_csv('/home/benutzer/Documents/projects/dust_analysis_old/uv spectral analysis/scripts/emlins.csv')
 opt_cont_bad = np.array([(2850, 4000)]+[(tmp-5, tmp+5) for tmp in emlines.wavelength if (tmp > 4000) and (tmp <5500)] + [(5500, 5700)])
 
 #### UV Continuum
@@ -81,7 +81,7 @@ log_calzetti_windows = np.log10(calzetti_windows)
 ## https://articles.adsabs.harvard.edu/pdf/1994ApJ...429..582C
 
 ## optical fitting windows
-emlines=pd.read_csv('/home/benutzer/Documents/projects/dust_analysis/heII/scripts/final_reduction_scripts/optical_emlines.csv')
+emlines=pd.read_csv('/home/benutzer/Documents/projects/dust_analysis_old/heII/scripts/final_reduction_scripts/optical_emlines.csv')
 emline_windows = np.array((emlines.Line.values-10, emlines.Line.values+10)).T
 
 u_flux = u.erg/u.s/u.cm/u.cm/u.AA
@@ -208,7 +208,7 @@ class _specData:
 
         targ_data = meta_df.loc[(target, band)].copy()
         self.targ_data=targ_data
-        self.file = f'/home/benutzer/Documents/projects/dust_analysis/heII/data/extracted_spec/{target}/{targ_data.prefix}{tr}_sx1.fits'
+        self.file = f'/home/benutzer/Documents/projects/dust_analysis_old/heII/data/extracted_spec/{target}/{targ_data.prefix}{tr}_sx1.fits'
         self.z = targ_data['z']
         self.Av = targ_data['Av']
 
@@ -325,17 +325,17 @@ for target in targets:
     spec = {b: _specData(target, b) for b in bands}
     all_spec[target + 'A'] = spec
 
-    if glob.glob(f'/home/benutzer/Documents/projects/dust_analysis/heII/data/extracted_spec/{target}/*B_sx1.fits') != []:
+    if glob.glob(f'/home/benutzer/Documents/projects/dust_analysis_old/heII/data/extracted_spec/{target}/*B_sx1.fits') != []:
         print(target + 'B')
         spec = {b: _specData(target, b, tr='B') for b in bands}
         all_spec[target + 'B'] = spec
 
-    if glob.glob(f'/home/benutzer/Documents/projects/dust_analysis/heII/data/extracted_spec/{target}/*C_sx1.fits') != []:
+    if glob.glob(f'/home/benutzer/Documents/projects/dust_analysis_old/heII/data/extracted_spec/{target}/*C_sx1.fits') != []:
         print(target + 'C')
         spec = {b: _specData(target, b, tr='C') for b in bands}
         all_spec[target + 'C'] = spec
 
-    if glob.glob(f'/home/benutzer/Documents/projects/dust_analysis/heII/data/extracted_spec/{target}/*D_sx1.fits') != []:
+    if glob.glob(f'/home/benutzer/Documents/projects/dust_analysis_old/heII/data/extracted_spec/{target}/*D_sx1.fits') != []:
         print(target + 'D')
         spec = {b: _specData(target, b, tr='D') for b in bands}
         all_spec[target + 'D'] = spec
@@ -366,7 +366,7 @@ INFO = {
 
 
 plot_dict = {0: {'b': 'G140L', 'line': 'f1640', 'window': np.array([[1630, 1652]])*u.AA, 'xlimit': (1550, 1700)},
-             1: {'b': 'G430M', 'line': 'f4686', 'window': np.array([[4670, 4705]])*u.AA, 'xlimit': (4590, 4810)},
+             1: {'b': 'G430M', 'line': 'f4686', 'window': np.array([[4670, 4705]])*u.AA, 'xlimit': (4000, 4810)},
              2: {'b': 'G430L', 'line': 'hg', 'window': np.array([[4332, 4353], [4670, 4705], [4849, 4870]])*u.AA, 'xlimit': (4200, 4470)},
              3: {'b': 'G430L', 'line': 'hb', 'window': np.array([[4332, 4353], [4670, 4705], [4849, 4870]])*u.AA, 'xlimit': (4650, 4950)}}
 

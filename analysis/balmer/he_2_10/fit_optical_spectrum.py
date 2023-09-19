@@ -25,13 +25,23 @@ def fit_muse_spectrum(coords, select_rad_pix, redshift, target_name):
 
     lam_range_temp = [3540, 8009]   # Focus on optical regio
     galaxy = np.sum(cube_muse[:, mask_spectrum], 1)
+    selected_err = np.sqrt(cube_muse_err)
+
+    galaxy_err = np.sqrt(np.sum(selected_err[:, mask_spectrum]**2, 1))
     lam = wave_muse
+    # plt.errorbar(wave_muse, galaxy, yerr=galaxy_err)
+    # plt.show()
+    # exit()
+
+
     w = (lam > lam_range_temp[0]) & (lam < lam_range_temp[1])
     galaxy = galaxy[w]
+    galaxy_err = galaxy_err[w]
     lam = lam[w]
 
     lam_range_temp = [np.min(lam), np.max(lam)]
     velscale = C*np.diff(np.log(lam[-2:]))  # Smallest velocity step
+    spectra_muse_err, ln_lam_gal, velscale_muse = util.log_rebin(lam_range_temp, galaxy_err, velscale=velscale)
     spectra_muse, ln_lam_gal, velscale_muse = util.log_rebin(lam_range_temp, galaxy, velscale=velscale)
 
     # print('spectra_muse ', spectra_muse)
@@ -72,7 +82,7 @@ def fit_muse_spectrum(coords, select_rad_pix, redshift, target_name):
     moments = [3, 3]
     start = [start, start]
 
-    pp = ppxf(templates, spectra_muse, np.ones_like(spectra_muse), velscale[0], start,
+    pp = ppxf(templates, spectra_muse, spectra_muse_err, velscale[0], start,
               moments=moments, degree=-1, mdegree=-1, lam=lam_gal, lam_temp=miles.lam_temp,
               reg_dim=reg_dim, component=component, gas_component=gas_component,
               reddening=0, gas_reddening=0, gas_names=gas_names)
@@ -87,7 +97,19 @@ def fit_muse_spectrum(coords, select_rad_pix, redshift, target_name):
 
     wavelength = pp.lam
     total_flux = pp.galaxy
+    total_flux_err = pp.noise
+
     best_fit = pp.bestfit
+    gas_best_fit = pp.gas_bestfit
+    continuum_best_fit = best_fit - gas_best_fit
+    # print(pp.__dict__.keys())
+    # # exit()
+    # plt.errorbar(wavelength, total_flux, yerr=total_flux_err)
+    # plt.plot(wavelength, continuum_best_fit)
+    # plt.plot(wavelength, gas_best_fit)
+    # plt.show()
+    # exit()
+
 
     gas_flux = pp.gas_flux
     gas_flux_err = pp.gas_flux_error
@@ -116,9 +138,15 @@ def fit_muse_spectrum(coords, select_rad_pix, redshift, target_name):
 
 file_name_he2_10_muse = '/home/benutzer/data/observation/heII_paper/he2_10/muse/ADP.2016-06-17T18 13 44.227.fits'
 hdu_muse = fits.open(file_name_he2_10_muse)
+print(hdu_muse.info())
+
+print(hdu_muse[1].header)
+print(hdu_muse[2].header)
+
 head_muse = hdu_muse[1].header
 wcs_muse = WCS(head_muse)
 cube_muse = hdu_muse[1].data   # cube.shape = (3681, nx, ny)
+cube_muse_err = hdu_muse[2].data   # cube.shape = (3681, nx, ny)
 npix_muse = cube_muse.shape[0]
 wave_muse = head_muse['CRVAL3'] + head_muse['CD3_3']*np.arange(npix_muse)
 pixsize_muse = abs(head_muse["CD1_1"])*3600    # 0.2"

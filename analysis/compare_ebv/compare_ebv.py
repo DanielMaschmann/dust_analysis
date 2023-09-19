@@ -1,40 +1,14 @@
 
 
-import os , glob
 import numpy as np
-import pandas as pd
-
 import dust_tools.extinction_tools
 
 np.seterr(all='ignore')  # hides irrelevant warnings about divide-by-zero, etc
 
-from pathlib import Path    # handle paths to files
 
 import astropy.units as u
-from astropy.io import fits
-from astropy.table import Table
-from astropy.modeling import models
-from astropy.modeling import fitting
-from astropy.nddata import StdDevUncertainty
-from astropy.nddata import NDData
-from astropy.wcs import WCS
-
-from specutils import Spectrum1D
-from specutils import SpectralRegion
-from specutils.fitting import fit_lines
-from specutils.fitting import fit_continuum
-from specutils.manipulation import extract_region
-
 from dust_extinction.parameter_averages import CCM89
-
-# %matplotlib inline
-import matplotlib
-from matplotlib import cm
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
-import matplotlib.patheffects as path_effects
-
-from specutils.manipulation import (box_smooth, gaussian_smooth, trapezoid_smooth)
 
 
 def k_lambda(wavelength, law='R15'):
@@ -90,37 +64,37 @@ calzetti_windows = np.array([(1265, 1285),
 
 plotting_params = {
     'HE_2_10A': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': '+', 'color': 'tab:blue'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'P', 'color': 'tab:blue', 'scatter_size': 200},
     'HE_2_10B': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': '+', 'color': 'tab:blue'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'P', 'color': 'tab:blue', 'scatter_size': 200},
     'HE_2_10C': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': '+', 'color': 'tab:blue'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'P', 'color': 'tab:blue', 'scatter_size': 200},
     'HE_2_10D': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': '+', 'color': 'tab:blue'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'P', 'color': 'tab:blue', 'scatter_size': 200},
     'MRK_33A': {
-        'heii_1640_det': False, 'heii_4686_det': False, 'marker': 'D', 'color': 'tab:orange'},
+        'heii_1640_det': False, 'heii_4686_det': False, 'marker': 'D', 'color': 'tab:orange', 'scatter_size': 200},
     'MRK_33B': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'D', 'color': 'tab:orange'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'D', 'color': 'tab:orange', 'scatter_size': 200},
     'NGC_3049A': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': '*', 'color': 'tab:green'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': '*', 'color': 'tab:green', 'scatter_size': 500},
     'NGC_3049B': {
-        'heii_1640_det': False, 'heii_4686_det': False, 'marker': '*', 'color': 'tab:green'},
+        'heii_1640_det': False, 'heii_4686_det': False, 'marker': '*', 'color': 'tab:green', 'scatter_size': 500},
     'NGC_3125A': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'o', 'color': 'tab:red'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'o', 'color': 'tab:red', 'scatter_size': 200},
     'NGC_4214A': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'p', 'color': 'tab:purple'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'p', 'color': 'tab:purple', 'scatter_size': 200},
     'NGC_4670A': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 's', 'color': 'tab:brown'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 's', 'color': 'tab:brown', 'scatter_size': 200},
     'NGC_4670B': {
-        'heii_1640_det': False, 'heii_4686_det': False, 'marker': 's', 'color': 'tab:brown'},
+        'heii_1640_det': False, 'heii_4686_det': False, 'marker': 's', 'color': 'tab:brown', 'scatter_size': 200},
     'NGC_4670C': {
-        'heii_1640_det': False, 'heii_4686_det': False, 'marker': 's', 'color': 'tab:brown'},
+        'heii_1640_det': False, 'heii_4686_det': False, 'marker': 's', 'color': 'tab:brown', 'scatter_size': 200},
     'TOL_1924_416A': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'x', 'color': 'tab:pink'},
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': 'X', 'color': 'tab:pink', 'scatter_size': 200},
     'TOL_1924_416B': {
-        'heii_1640_det': False, 'heii_4686_det': False, 'marker': 'x', 'color': 'tab:pink'},
+        'heii_1640_det': False, 'heii_4686_det': False, 'marker': 'X', 'color': 'tab:pink', 'scatter_size': 200},
     'TOL_89A': {
-        'heii_1640_det': True, 'heii_4686_det': True, 'marker': '>', 'color': 'tab:gray'}
+        'heii_1640_det': True, 'heii_4686_det': True, 'marker': '>', 'color': 'tab:gray', 'scatter_size': 200}
 }
 
 
@@ -239,8 +213,10 @@ ebv_uv_tol1924a, ebv_uv_err_tol1924a, ebv_heii_tol1924a, ebv_heii_err_tol1924a =
 ebv_balmer_tol1924, ebv_balmer_err_tol1924 = get_balmer_ebv(target='TOL_1924_416', ext='')
 
 ebv_uv_tol89a, ebv_uv_err_tol89a, ebv_heii_tol89a, ebv_heii_err_tol89a = get_ebv_stis_values(target_name='TOL_89A')
-ebv_balmer_tol89, ebv_balmer_err_tol89 = get_balmer_ebv(target='TOL_89', ext='')
-
+# ebv_balmer_tol89, ebv_balmer_err_tol89 = get_balmer_ebv(target='TOL_89', ext='')
+# taken from F.Sidoli, L.J.Smith andP.A.Crowther 2006
+ebv_balmer_tol89 = 0.07
+ebv_balmer_err_tol89 = 0.01
 
 figure = plt.figure(figsize=(25, 20))
 fontsize = 28
@@ -248,162 +224,260 @@ ax_balmer_heii = figure.add_axes([0.065, 0.53, 0.465, 0.465])
 ax_balmer_uv = figure.add_axes([0.53, 0.53, 0.465, 0.465])
 ax_heii_uv = figure.add_axes([0.53, 0.065, 0.465, 0.465])
 ax_blank = figure.add_axes([0.065, 0.065, 0.465, 0.465])
+ax_blank_2 = figure.add_axes([0.065, 0.065, 0.465, 0.465])
 ax_blank.axis('off')
+ax_blank_2.axis('off')
 
-ax_balmer_heii.scatter(ebv_heii_he210a, ebv_balmer_he210a, s=150, color=plotting_params['HE_2_10A']['color'],
-                      marker=plotting_params['HE_2_10A']['marker'])
-ax_balmer_heii.scatter(ebv_heii_he210b, ebv_balmer_he210b, s=150, color=plotting_params['HE_2_10A']['color'],
-                      marker=plotting_params['HE_2_10A']['marker'])
-ax_balmer_heii.scatter(ebv_heii_he210c, ebv_balmer_he210c, s=150, color=plotting_params['HE_2_10A']['color'],
-                      marker=plotting_params['HE_2_10A']['marker'])
-ax_balmer_heii.scatter(ebv_heii_he210d, ebv_balmer_he210d, s=150, color=plotting_params['HE_2_10A']['color'],
-                      marker=plotting_params['HE_2_10A']['marker'])
+ax_balmer_heii.scatter(ebv_heii_he210a, ebv_balmer_he210a, color=plotting_params['HE_2_10A']['color'],
+                      marker=plotting_params['HE_2_10A']['marker'], s=plotting_params['HE_2_10A']['scatter_size'])
+ax_balmer_heii.scatter(ebv_heii_he210b, ebv_balmer_he210b, color=plotting_params['HE_2_10A']['color'],
+                      marker=plotting_params['HE_2_10A']['marker'], s=plotting_params['HE_2_10A']['scatter_size'])
+ax_balmer_heii.scatter(ebv_heii_he210c, ebv_balmer_he210c, color=plotting_params['HE_2_10A']['color'],
+                      marker=plotting_params['HE_2_10A']['marker'], s=plotting_params['HE_2_10A']['scatter_size'])
+ax_balmer_heii.scatter(ebv_heii_he210d, ebv_balmer_he210d, color=plotting_params['HE_2_10A']['color'],
+                      marker=plotting_params['HE_2_10A']['marker'], s=plotting_params['HE_2_10A']['scatter_size'])
 ax_balmer_heii.errorbar(ebv_heii_he210a, ebv_balmer_he210a, xerr=ebv_heii_err_he210a, yerr=ebv_balmer_err_he210a,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_balmer_heii.errorbar(ebv_heii_he210b, ebv_balmer_he210b, xerr=ebv_heii_err_he210b, yerr=ebv_balmer_err_he210b,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_balmer_heii.errorbar(ebv_heii_he210c, ebv_balmer_he210c, xerr=ebv_heii_err_he210c, yerr=ebv_balmer_err_he210c,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_balmer_heii.errorbar(ebv_heii_he210d, ebv_balmer_he210d, xerr=ebv_heii_err_he210d, yerr=ebv_balmer_err_he210d,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 
 
-ax_balmer_uv.scatter(ebv_uv_he210a, ebv_balmer_he210a, s=150, color=plotting_params['HE_2_10A']['color'],
+ax_balmer_uv.scatter(ebv_uv_he210a, ebv_balmer_he210a, s=plotting_params['HE_2_10A']['scatter_size'], color=plotting_params['HE_2_10A']['color'],
                       marker=plotting_params['HE_2_10A']['marker'])
-ax_balmer_uv.scatter(ebv_uv_he210b, ebv_balmer_he210b, s=150, color=plotting_params['HE_2_10A']['color'],
+ax_balmer_uv.scatter(ebv_uv_he210b, ebv_balmer_he210b, s=plotting_params['HE_2_10A']['scatter_size'], color=plotting_params['HE_2_10A']['color'],
                       marker=plotting_params['HE_2_10A']['marker'])
-ax_balmer_uv.scatter(ebv_uv_he210c, ebv_balmer_he210c, s=150, color=plotting_params['HE_2_10A']['color'],
+ax_balmer_uv.scatter(ebv_uv_he210c, ebv_balmer_he210c, s=plotting_params['HE_2_10A']['scatter_size'], color=plotting_params['HE_2_10A']['color'],
                       marker=plotting_params['HE_2_10A']['marker'])
-ax_balmer_uv.scatter(ebv_uv_he210d, ebv_balmer_he210d, s=150, color=plotting_params['HE_2_10A']['color'],
+ax_balmer_uv.scatter(ebv_uv_he210d, ebv_balmer_he210d, s=plotting_params['HE_2_10A']['scatter_size'], color=plotting_params['HE_2_10A']['color'],
                       marker=plotting_params['HE_2_10A']['marker'])
 ax_balmer_uv.errorbar(ebv_uv_he210a, ebv_balmer_he210a, xerr=ebv_uv_err_he210a, yerr=ebv_balmer_err_he210a,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_balmer_uv.errorbar(ebv_uv_he210b, ebv_balmer_he210b, xerr=ebv_uv_err_he210b, yerr=ebv_balmer_err_he210b,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_balmer_uv.errorbar(ebv_uv_he210c, ebv_balmer_he210c, xerr=ebv_uv_err_he210c, yerr=ebv_balmer_err_he210c,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_balmer_uv.errorbar(ebv_uv_he210d, ebv_balmer_he210d, xerr=ebv_uv_err_he210d, yerr=ebv_balmer_err_he210d,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 
-ax_heii_uv.scatter(ebv_uv_he210a, ebv_heii_he210a, s=150, color=plotting_params['HE_2_10A']['color'],
+ax_heii_uv.scatter(ebv_uv_he210a, ebv_heii_he210a, s=plotting_params['HE_2_10A']['scatter_size'], color=plotting_params['HE_2_10A']['color'],
                       marker=plotting_params['HE_2_10A']['marker'])
-ax_heii_uv.scatter(ebv_uv_he210b, ebv_heii_he210b, s=150, color=plotting_params['HE_2_10A']['color'],
+ax_heii_uv.scatter(ebv_uv_he210b, ebv_heii_he210b, s=plotting_params['HE_2_10A']['scatter_size'], color=plotting_params['HE_2_10A']['color'],
                       marker=plotting_params['HE_2_10A']['marker'])
-ax_heii_uv.scatter(ebv_uv_he210c, ebv_heii_he210c, s=150, color=plotting_params['HE_2_10A']['color'],
+ax_heii_uv.scatter(ebv_uv_he210c, ebv_heii_he210c, s=plotting_params['HE_2_10A']['scatter_size'], color=plotting_params['HE_2_10A']['color'],
                       marker=plotting_params['HE_2_10A']['marker'])
-ax_heii_uv.scatter(ebv_uv_he210d, ebv_heii_he210d, s=150, color=plotting_params['HE_2_10A']['color'],
+ax_heii_uv.scatter(ebv_uv_he210d, ebv_heii_he210d, s=plotting_params['HE_2_10A']['scatter_size'], color=plotting_params['HE_2_10A']['color'],
                       marker=plotting_params['HE_2_10A']['marker'])
 ax_heii_uv.errorbar(ebv_uv_he210a, ebv_heii_he210a, xerr=ebv_uv_err_he210a, yerr=ebv_heii_err_he210a,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_heii_uv.errorbar(ebv_uv_he210b, ebv_heii_he210b, xerr=ebv_uv_err_he210b, yerr=ebv_heii_err_he210b,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_heii_uv.errorbar(ebv_uv_he210c, ebv_heii_he210c, xerr=ebv_uv_err_he210c, yerr=ebv_heii_err_he210c,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 ax_heii_uv.errorbar(ebv_uv_he210d, ebv_heii_he210d, xerr=ebv_uv_err_he210d, yerr=ebv_heii_err_he210d,
-                       fmt='.', color=plotting_params['HE_2_10A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['HE_2_10A']['color'])
 
 
 
 
-ax_balmer_heii.scatter(ebv_heii_mrk33b, ebv_balmer_mrk33, s=150, color=plotting_params['MRK_33A']['color'],
+ax_balmer_heii.scatter(ebv_heii_mrk33b, ebv_balmer_mrk33, s=plotting_params['MRK_33A']['scatter_size'], color=plotting_params['MRK_33A']['color'],
                       marker=plotting_params['MRK_33A']['marker'])
 ax_balmer_heii.errorbar(ebv_heii_mrk33b, ebv_balmer_mrk33, xerr=ebv_heii_err_mrk33b, yerr=ebv_balmer_err_mrk33,
-                       fmt='.', color=plotting_params['MRK_33A']['color'])
-ax_balmer_uv.scatter(ebv_uv_mrk33b, ebv_balmer_mrk33, s=150, color=plotting_params['MRK_33A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['MRK_33A']['color'])
+ax_balmer_uv.scatter(ebv_uv_mrk33b, ebv_balmer_mrk33, s=plotting_params['MRK_33A']['scatter_size'], color=plotting_params['MRK_33A']['color'],
                       marker=plotting_params['MRK_33A']['marker'])
 ax_balmer_uv.errorbar(ebv_uv_mrk33b, ebv_balmer_mrk33, xerr=ebv_uv_err_mrk33b, yerr=ebv_balmer_err_mrk33,
-                       fmt='.', color=plotting_params['MRK_33A']['color'])
-ax_heii_uv.scatter(ebv_uv_mrk33b, ebv_heii_mrk33b, s=150, color=plotting_params['MRK_33A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['MRK_33A']['color'])
+ax_heii_uv.scatter(ebv_uv_mrk33b, ebv_heii_mrk33b, s=plotting_params['MRK_33A']['scatter_size'], color=plotting_params['MRK_33A']['color'],
                       marker=plotting_params['MRK_33A']['marker'])
 ax_heii_uv.errorbar(ebv_uv_mrk33b, ebv_heii_mrk33b, xerr=ebv_uv_err_mrk33b, yerr=ebv_heii_err_mrk33b,
-                       fmt='.', color=plotting_params['MRK_33A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['MRK_33A']['color'])
 
 
-ax_balmer_heii.scatter(ebv_heii_ngc3049a, ebv_balmer_ngc3049, s=150, color=plotting_params['NGC_3049A']['color'],
+ax_balmer_heii.scatter(ebv_heii_ngc3049a, ebv_balmer_ngc3049, s=plotting_params['NGC_3049A']['scatter_size'], color=plotting_params['NGC_3049A']['color'],
                       marker=plotting_params['NGC_3049A']['marker'])
 ax_balmer_heii.errorbar(ebv_heii_ngc3049a, ebv_balmer_ngc3049, xerr=ebv_heii_err_ngc3049a, yerr=ebv_balmer_err_ngc3049,
-                       fmt='.', color=plotting_params['NGC_3049A']['color'])
-ax_balmer_uv.scatter(ebv_uv_ngc3049a, ebv_balmer_ngc3049, s=150, color=plotting_params['NGC_3049A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_3049A']['color'])
+ax_balmer_uv.scatter(ebv_uv_ngc3049a, ebv_balmer_ngc3049, s=plotting_params['NGC_3049A']['scatter_size'], color=plotting_params['NGC_3049A']['color'],
                       marker=plotting_params['NGC_3049A']['marker'])
 ax_balmer_uv.errorbar(ebv_uv_ngc3049a, ebv_balmer_ngc3049, xerr=ebv_uv_err_ngc3049a, yerr=ebv_balmer_err_ngc3049,
-                       fmt='.', color=plotting_params['NGC_3049A']['color'])
-ax_heii_uv.scatter(ebv_uv_ngc3049a, ebv_heii_ngc3049a, s=150, color=plotting_params['NGC_3049A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_3049A']['color'])
+ax_heii_uv.scatter(ebv_uv_ngc3049a, ebv_heii_ngc3049a, s=plotting_params['NGC_3049A']['scatter_size'], color=plotting_params['NGC_3049A']['color'],
                       marker=plotting_params['NGC_3049A']['marker'])
 ax_heii_uv.errorbar(ebv_uv_ngc3049a, ebv_heii_ngc3049a, xerr=ebv_uv_err_ngc3049a, yerr=ebv_heii_err_ngc3049a,
-                       fmt='.', color=plotting_params['NGC_3049A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_3049A']['color'])
 
 
 
-ax_balmer_heii.scatter(ebv_heii_ngc3125a, ebv_balmer_ngc3125, s=150, color=plotting_params['NGC_3125A']['color'],
+ax_balmer_heii.scatter(ebv_heii_ngc3125a, ebv_balmer_ngc3125, s=plotting_params['NGC_4214A']['scatter_size'], color=plotting_params['NGC_3125A']['color'],
                       marker=plotting_params['NGC_3125A']['marker'])
 ax_balmer_heii.errorbar(ebv_heii_ngc3125a, ebv_balmer_ngc3125, xerr=ebv_heii_err_ngc3125a, yerr=ebv_balmer_err_ngc3125,
-                       fmt='.', color=plotting_params['NGC_3125A']['color'])
-ax_balmer_uv.scatter(ebv_uv_ngc3125a, ebv_balmer_ngc3125, s=150, color=plotting_params['NGC_3125A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_3125A']['color'])
+ax_balmer_uv.scatter(ebv_uv_ngc3125a, ebv_balmer_ngc3125, s=plotting_params['NGC_4214A']['scatter_size'], color=plotting_params['NGC_3125A']['color'],
                       marker=plotting_params['NGC_3125A']['marker'])
 ax_balmer_uv.errorbar(ebv_uv_ngc3125a, ebv_balmer_ngc3125, xerr=ebv_uv_err_ngc3125a, yerr=ebv_balmer_err_ngc3125,
-                       fmt='.', color=plotting_params['NGC_3125A']['color'])
-ax_heii_uv.scatter(ebv_uv_ngc3125a, ebv_heii_ngc3125a, s=150, color=plotting_params['NGC_3125A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_3125A']['color'])
+ax_heii_uv.scatter(ebv_uv_ngc3125a, ebv_heii_ngc3125a, s=plotting_params['NGC_4214A']['scatter_size'], color=plotting_params['NGC_3125A']['color'],
                       marker=plotting_params['NGC_3125A']['marker'])
 ax_heii_uv.errorbar(ebv_uv_ngc3125a, ebv_heii_ngc3125a, xerr=ebv_uv_err_ngc3125a, yerr=ebv_heii_err_ngc3125a,
-                       fmt='.', color=plotting_params['NGC_3125A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_3125A']['color'])
 
 
-ax_balmer_heii.scatter(ebv_heii_ngc4214a, ebv_balmer_ngc4214, s=150, color=plotting_params['NGC_4214A']['color'],
+ax_balmer_heii.scatter(ebv_heii_ngc4214a, ebv_balmer_ngc4214, s=plotting_params['NGC_4214A']['scatter_size'], color=plotting_params['NGC_4214A']['color'],
                       marker=plotting_params['NGC_4214A']['marker'])
 ax_balmer_heii.errorbar(ebv_heii_ngc4214a, ebv_balmer_ngc4214, xerr=ebv_heii_err_ngc4214a, yerr=ebv_balmer_err_ngc4214,
-                       fmt='.', color=plotting_params['NGC_4214A']['color'])
-ax_balmer_uv.scatter(ebv_uv_ngc4214a, ebv_balmer_ngc4214, s=150, color=plotting_params['NGC_4214A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_4214A']['color'])
+ax_balmer_uv.scatter(ebv_uv_ngc4214a, ebv_balmer_ngc4214, s=plotting_params['NGC_4214A']['scatter_size'], color=plotting_params['NGC_4214A']['color'],
                       marker=plotting_params['NGC_4214A']['marker'])
 ax_balmer_uv.errorbar(ebv_uv_ngc4214a, ebv_balmer_ngc4214, xerr=ebv_uv_err_ngc4214a, yerr=ebv_balmer_err_ngc4214,
-                       fmt='.', color=plotting_params['NGC_4214A']['color'])
-ax_heii_uv.scatter(ebv_uv_ngc4214a, ebv_heii_ngc4214a, s=150, color=plotting_params['NGC_4214A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_4214A']['color'])
+ax_heii_uv.scatter(ebv_uv_ngc4214a, ebv_heii_ngc4214a, s=plotting_params['NGC_4214A']['scatter_size'], color=plotting_params['NGC_4214A']['color'],
                       marker=plotting_params['NGC_4214A']['marker'])
 ax_heii_uv.errorbar(ebv_uv_ngc4214a, ebv_heii_ngc4214a, xerr=ebv_uv_err_ngc4214a, yerr=ebv_heii_err_ngc4214a,
-                       fmt='.', color=plotting_params['NGC_4214A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_4214A']['color'])
 
 
-ax_balmer_heii.scatter(ebv_heii_ngc4670a, ebv_balmer_ngc4670, s=150, color=plotting_params['NGC_4670A']['color'],
+ax_balmer_heii.scatter(ebv_heii_ngc4670a, ebv_balmer_ngc4670, s=plotting_params['TOL_1924_416A']['scatter_size'], color=plotting_params['NGC_4670A']['color'],
                       marker=plotting_params['NGC_4670A']['marker'])
 ax_balmer_heii.errorbar(ebv_heii_ngc4670a, ebv_balmer_ngc4670, xerr=ebv_heii_err_ngc4670a, yerr=ebv_balmer_err_ngc4670,
-                       fmt='.', color=plotting_params['NGC_4670A']['color'])
-ax_balmer_uv.scatter(ebv_uv_ngc4670a, ebv_balmer_ngc4670, s=150, color=plotting_params['NGC_4670A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_4670A']['color'])
+ax_balmer_uv.scatter(ebv_uv_ngc4670a, ebv_balmer_ngc4670, s=plotting_params['TOL_1924_416A']['scatter_size'], color=plotting_params['NGC_4670A']['color'],
                       marker=plotting_params['NGC_4670A']['marker'])
 ax_balmer_uv.errorbar(ebv_uv_ngc4670a, ebv_balmer_ngc4670, xerr=ebv_uv_err_ngc4670a, yerr=ebv_balmer_err_ngc4670,
-                       fmt='.', color=plotting_params['NGC_4670A']['color'])
-ax_heii_uv.scatter(ebv_uv_ngc4670a, ebv_heii_ngc4670a, s=150, color=plotting_params['NGC_4670A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_4670A']['color'])
+ax_heii_uv.scatter(ebv_uv_ngc4670a, ebv_heii_ngc4670a, s=plotting_params['TOL_1924_416A']['scatter_size'], color=plotting_params['NGC_4670A']['color'],
                       marker=plotting_params['NGC_4670A']['marker'])
 ax_heii_uv.errorbar(ebv_uv_ngc4670a, ebv_heii_ngc4670a, xerr=ebv_uv_err_ngc4670a, yerr=ebv_heii_err_ngc4670a,
-                       fmt='.', color=plotting_params['NGC_4670A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['NGC_4670A']['color'])
 
 
-ax_balmer_heii.scatter(ebv_heii_tol1924a, ebv_balmer_tol1924, s=150, color=plotting_params['TOL_1924_416A']['color'],
+ax_balmer_heii.scatter(ebv_heii_tol1924a, ebv_balmer_tol1924, s=plotting_params['TOL_1924_416A']['scatter_size'], color=plotting_params['TOL_1924_416A']['color'],
                       marker=plotting_params['TOL_1924_416A']['marker'])
 ax_balmer_heii.errorbar(ebv_heii_tol1924a, ebv_balmer_tol1924, xerr=ebv_heii_err_tol1924a, yerr=ebv_balmer_err_tol1924,
-                       fmt='.', color=plotting_params['TOL_1924_416A']['color'])
-ax_balmer_uv.scatter(ebv_uv_tol1924a, ebv_balmer_tol1924, s=150, color=plotting_params['TOL_1924_416A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['TOL_1924_416A']['color'])
+ax_balmer_uv.scatter(ebv_uv_tol1924a, ebv_balmer_tol1924, s=plotting_params['TOL_1924_416A']['scatter_size'], color=plotting_params['TOL_1924_416A']['color'],
                       marker=plotting_params['TOL_1924_416A']['marker'])
 ax_balmer_uv.errorbar(ebv_uv_tol1924a, ebv_balmer_tol1924, xerr=ebv_uv_err_tol1924a, yerr=ebv_balmer_err_tol1924,
-                       fmt='.', color=plotting_params['TOL_1924_416A']['color'])
-ax_heii_uv.scatter(ebv_uv_tol1924a, ebv_heii_tol1924a, s=150, color=plotting_params['TOL_1924_416A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['TOL_1924_416A']['color'])
+ax_heii_uv.scatter(ebv_uv_tol1924a, ebv_heii_tol1924a, s=plotting_params['TOL_1924_416A']['scatter_size'], color=plotting_params['TOL_1924_416A']['color'],
                       marker=plotting_params['TOL_1924_416A']['marker'])
 ax_heii_uv.errorbar(ebv_uv_tol1924a, ebv_heii_tol1924a, xerr=ebv_uv_err_tol1924a, yerr=ebv_heii_err_tol1924a,
-                       fmt='.', color=plotting_params['TOL_1924_416A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['TOL_1924_416A']['color'])
 
 
-ax_balmer_heii.scatter(ebv_heii_tol89a, ebv_balmer_tol89, s=150, color=plotting_params['TOL_89A']['color'],
+ax_balmer_heii.scatter(ebv_heii_tol89a, ebv_balmer_tol89, s=plotting_params['TOL_89A']['scatter_size'], color=plotting_params['TOL_89A']['color'],
                       marker=plotting_params['TOL_89A']['marker'])
 ax_balmer_heii.errorbar(ebv_heii_tol89a, ebv_balmer_tol89, xerr=ebv_heii_err_tol89a, yerr=ebv_balmer_err_tol89,
-                       fmt='.', color=plotting_params['TOL_89A']['color'])
-ax_balmer_uv.scatter(ebv_uv_tol89a, ebv_balmer_tol89, s=150, color=plotting_params['TOL_89A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['TOL_89A']['color'])
+ax_balmer_uv.scatter(ebv_uv_tol89a, ebv_balmer_tol89, s=plotting_params['TOL_89A']['scatter_size'], color=plotting_params['TOL_89A']['color'],
                       marker=plotting_params['TOL_89A']['marker'])
 ax_balmer_uv.errorbar(ebv_uv_tol89a, ebv_balmer_tol89, xerr=ebv_uv_err_tol89a, yerr=ebv_balmer_err_tol89,
-                       fmt='.', color=plotting_params['TOL_89A']['color'])
-ax_heii_uv.scatter(ebv_uv_tol89a, ebv_heii_tol89a, s=150, color=plotting_params['TOL_89A']['color'],
+                       elinewidth=3, fmt='.', color=plotting_params['TOL_89A']['color'])
+ax_heii_uv.scatter(ebv_uv_tol89a, ebv_heii_tol89a, s=plotting_params['TOL_89A']['scatter_size'], color=plotting_params['TOL_89A']['color'],
                       marker=plotting_params['TOL_89A']['marker'])
 ax_heii_uv.errorbar(ebv_uv_tol89a, ebv_heii_tol89a, xerr=ebv_uv_err_tol89a, yerr=ebv_heii_err_tol89a,
-                       fmt='.', color=plotting_params['TOL_89A']['color'])
+                       elinewidth=3, fmt='.', color=plotting_params['TOL_89A']['color'])
 
-legend_targets = ['HE_2_10A', 'MRK_33A', 'NGC_3049A', 'NGC_3125A', 'NGC_4214A', 'NGC_4670A', 'TOL_1924_416A', 'TOL_89A']
+# add tags
+
+ax_balmer_heii.text(ebv_heii_he210a - 0.02, ebv_balmer_he210a - 0.02, 'A', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_balmer_heii.text(ebv_heii_he210b - 0.04, ebv_balmer_he210b, 'B', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_balmer_heii.text(ebv_heii_he210c - 0.04, ebv_balmer_he210c, 'C', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_balmer_heii.text(ebv_heii_he210d - 0.05, ebv_balmer_he210d, 'D', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_he210a - 0.03, ebv_balmer_he210a + 0.01, 'A', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_he210b - 0.03, ebv_balmer_he210b - 0.01, 'B', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_he210c - 0.03, ebv_balmer_he210c - 0.01, 'C', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_he210d - 0.03, ebv_balmer_he210d + 0.01, 'D', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_he210a - 0.03, ebv_heii_he210a + 0.01, 'A', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_he210b - 0.025, ebv_heii_he210b - 0.015, 'B', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_he210c - 0.03, ebv_heii_he210c + 0.01, 'C', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_he210d - 0.03, ebv_heii_he210d + 0.01, 'D', horizontalalignment='left', verticalalignment='center',
+                    color=plotting_params['HE_2_10A']['color'], fontsize=fontsize)
+
+ax_balmer_heii.text(ebv_heii_mrk33b - 0.025, ebv_balmer_mrk33 - 0.015, 'B', horizontalalignment='left', verticalalignment='top',
+                    color=plotting_params['MRK_33A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_mrk33b - 0.025, ebv_balmer_mrk33 - 0.015, 'B', horizontalalignment='left', verticalalignment='top',
+                    color=plotting_params['MRK_33A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_mrk33b - 0.025, ebv_heii_mrk33b - 0.015, 'B', horizontalalignment='left', verticalalignment='top',
+                    color=plotting_params['MRK_33A']['color'], fontsize=fontsize)
+
+
+ax_balmer_heii.text(ebv_heii_ngc3049a - 0.025, ebv_balmer_ngc3049 + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_3049A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_ngc3049a - 0.025, ebv_balmer_ngc3049 + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_3049A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_ngc3049a - 0.025, ebv_heii_ngc3049a + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_3049A']['color'], fontsize=fontsize)
+
+ax_balmer_heii.text(ebv_heii_ngc3125a - 0.015, ebv_balmer_ngc3125 + 0.01, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_3125A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_ngc3125a - 0.015, ebv_balmer_ngc3125 + 0.01, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_3125A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_ngc3125a - 0.015, ebv_heii_ngc3125a + 0.01, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_3125A']['color'], fontsize=fontsize)
+
+ax_balmer_heii.text(ebv_heii_ngc4214a - 0.025, ebv_balmer_ngc4214 - 0.015, 'A', horizontalalignment='left', verticalalignment='top',
+                    color=plotting_params['NGC_4214A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_ngc4214a - 0.025, ebv_balmer_ngc4214 - 0.015, 'A', horizontalalignment='left', verticalalignment='top',
+                    color=plotting_params['NGC_4214A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_ngc4214a - 0.025, ebv_heii_ngc4214a - 0.015, 'A', horizontalalignment='left', verticalalignment='top',
+                    color=plotting_params['NGC_4214A']['color'], fontsize=fontsize)
+
+
+ax_balmer_heii.text(ebv_heii_ngc4670a - 0.025, ebv_balmer_ngc4670 + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_4670A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_ngc4670a - 0.025, ebv_balmer_ngc4670 + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_4670A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_ngc4670a - 0.025, ebv_heii_ngc4670a + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['NGC_4670A']['color'], fontsize=fontsize)
+
+ax_balmer_heii.text(ebv_heii_tol1924a - 0.025, ebv_balmer_tol1924 + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['TOL_1924_416A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_tol1924a - 0.025, ebv_balmer_tol1924 + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['TOL_1924_416A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_tol1924a - 0.025, ebv_heii_tol1924a + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['TOL_1924_416A']['color'], fontsize=fontsize)
+
+ax_balmer_heii.text(ebv_heii_tol89a - 0.025, ebv_balmer_tol89 + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['TOL_89A']['color'], fontsize=fontsize)
+ax_balmer_uv.text(ebv_uv_tol89a - 0.025, ebv_balmer_tol89 + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['TOL_89A']['color'], fontsize=fontsize)
+ax_heii_uv.text(ebv_uv_tol89a - 0.025, ebv_heii_tol89a + 0.015, 'A', horizontalalignment='left', verticalalignment='bottom',
+                    color=plotting_params['TOL_89A']['color'], fontsize=fontsize)
+
+
+legend_targets = ['HE_2_10A',
+                  'NGC_3049A',
+                  'NGC_3125A',
+                  'MRK_33A',
+                  'NGC_4214A',
+                  'NGC_4670A',
+                  'TOL_89A',
+                  'TOL_1924_416A',
+                  ]
+legend_balmer = ['(Balmer: MUSE)',
+                 '(Balmer: SDSS)',
+                 '(Balmer: MUSE)',
+                 '(Balmer: SDSS)',
+                 '(Balmer: Literature)',
+                 '(Balmer: SDSS)',
+                 '(Balmer: Literature)',
+                 '(Balmer: MUSE)',
+                 ]
 
 for legend_name in legend_targets:
     target_name = str(legend_name[:-1]).replace('_', '-')
@@ -411,21 +485,26 @@ for legend_name in legend_targets:
     target_name = target_name.replace('MRK-', 'MRK ')
     target_name = target_name.replace('HE-', 'HE ')
     target_name = target_name.replace('TOL-', 'TOL ')
-    ax_blank.scatter([], [], s=150, marker=plotting_params[legend_name]['marker'],
+    ax_blank.scatter([], [], s=plotting_params[legend_name]['scatter_size'], marker=plotting_params[legend_name]['marker'],
                   color=plotting_params[legend_name]['color'], label=target_name)
-ax_blank.legend(frameon=False, loc=3, bbox_to_anchor=[0.2, 0.1], fontsize=fontsize + 5)
+ax_blank.legend(frameon=False, loc=3, bbox_to_anchor=[-0.05, 0.1], fontsize=fontsize + 5)
+
+for legend_name in legend_balmer:
+
+    ax_blank_2.scatter([], [], color='white', label=legend_name)
+ax_blank_2.legend(frameon=False, loc=3, bbox_to_anchor=[0.25, 0.1], fontsize=fontsize + 5)
 
 dummy_x_data = np.linspace(-0.1, 0.5)
 dummy_y_data = 1 * dummy_x_data
 print('dummy_x_data ', dummy_x_data)
 print('dummy_y_data ', dummy_y_data)
-ax_balmer_heii.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=2)
-ax_balmer_uv.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=2)
-ax_heii_uv.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=2)
+ax_balmer_heii.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=3)
+ax_balmer_uv.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=3)
+ax_heii_uv.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=3)
 
-ax_balmer_heii.tick_params(axis='both', which='both', width=1.5, length=4, right=True, top=True, direction='in', labelsize=fontsize)
-ax_balmer_uv.tick_params(axis='both', which='both', width=1.5, length=4, right=True, top=True, direction='in', labelsize=fontsize)
-ax_heii_uv.tick_params(axis='both', which='both', width=1.5, length=4, right=True, top=True, direction='in', labelsize=fontsize)
+ax_balmer_heii.tick_params(axis='both', which='both', width=2.5, length=6, right=True, top=True, direction='in', labelsize=fontsize)
+ax_balmer_uv.tick_params(axis='both', which='both', width=2.5, length=6, right=True, top=True, direction='in', labelsize=fontsize)
+ax_heii_uv.tick_params(axis='both', which='both', width=2.5, length=6, right=True, top=True, direction='in', labelsize=fontsize)
 
 ax_balmer_heii.set_xlim(-0.15, 0.55)
 ax_balmer_uv.set_xlim(-0.15, 0.55)
@@ -445,6 +524,7 @@ ax_heii_uv.set_ylabel(r'E(B-V)$_{\rm HeII}$', fontsize=fontsize+5)
 ax_heii_uv.set_xlabel(r'E(B-V)$_{\rm UV}$', fontsize=fontsize+5)
 
 plt.savefig('plot_output/compare_ebv.png')
+plt.savefig('plot_output/compare_ebv.pdf')
 
 
 exit()

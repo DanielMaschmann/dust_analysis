@@ -1,5 +1,5 @@
 import numpy as np
-from dust_extinction.parameter_averages import CCM89
+from dust_extinction.parameter_averages import CCM89, F99, F04, GCC09, F19
 import astropy.units as u
 
 
@@ -77,6 +77,18 @@ class ExtinctionTools():
         return (reddening1 - reddening2)*av/reddening_v
 
     @staticmethod
+    def color_ext_f99_av(wave1, wave2, av, r_v=3.1):
+
+        model_f99 = F99(Rv=r_v)
+        reddening1 = model_f99(wave1*u.micron) * r_v
+        reddening2 = model_f99(wave2*u.micron) * r_v
+
+        wave_v = 5388.55 * 1e-4
+        reddening_v = model_f99(wave_v*u.micron) * r_v
+
+        return (reddening1 - reddening2)*av/reddening_v
+
+    @staticmethod
     def get_balmer_extinct_alpha_beta(flux_h_alpha_6565, flux_h_beta_4863):
         r"""
         calculate gas extinction using the Balmer decrement
@@ -134,6 +146,7 @@ class ExtinctionTools():
         h_gamma_over_h_beta = 0.469
 
         e_b_v = (-2.5 / (kappa_h_beta - kappa_h_gamma)) * np.log10(h_gamma_over_h_beta / (flux_h_gamma_4342 / flux_h_beta_4863))
+        # e_b_v = 4.43 * np.log10((flux_h_beta_4863 / flux_h_gamma_4342) / 2.13)
 
         return e_b_v
 

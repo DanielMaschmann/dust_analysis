@@ -16,11 +16,13 @@ hdu_muse = fits.open(file_name_ngc3125_muse)
 head_muse = hdu_muse[1].header
 wcs_muse = WCS(head_muse)
 cube_muse = hdu_muse[1].data   # cube.shape = (3681, nx, ny)
+cube_muse_err = hdu_muse[2].data   # cube.shape = (3681, nx, ny)
 npix_muse = cube_muse.shape[0]
 wave_muse = head_muse['CRVAL3'] + head_muse['CD3_3']*np.arange(npix_muse)
 pixsize_muse = abs(head_muse["CD1_1"])*3600    # 0.2"
 mask_h_alpha = (wave_muse > 6570) & (wave_muse < 6590)
 data_muse_h_alpha = np.sum(cube_muse[mask_h_alpha, :, :], 0)
+data_muse_h_alpha_err = np.sum(cube_muse_err[mask_h_alpha, :, :], 0)
 
 
 
