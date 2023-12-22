@@ -132,6 +132,9 @@ def get_rgb_img(target, cutout_size=(12, 12), coord_str='coords_img'):
     wcs_g = WCS(hdu_hst_g[1].header)
     wcs_r = WCS(hdu_hst_r[1].header)
 
+    print(hdu_hst_b[0].header)
+    exit()
+
     coords_cent = SkyCoord(file_name_dict[target][coord_str], unit=(u.hourangle, u.deg))
     cutout_b = helper_func.get_img_cutout(img=data_b, wcs=wcs_b, coord=coords_cent, cutout_size=cutout_size)
     cutout_g = helper_func.get_img_cutout(img=data_g, wcs=wcs_g, coord=coords_cent, cutout_size=cutout_size)

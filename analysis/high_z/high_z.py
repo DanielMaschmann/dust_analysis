@@ -6,12 +6,14 @@ import numpy as np
 cosmology = LambdaCDM(H0=70.0, Om0=0.3, Ode0=0.7)
 
 
-mean_redshift = np.mean([2.574, 2.614, 3.202, 2.385, 3.077, 2.598])
+# mean_redshift = np.mean([2.574, 2.614, 3.202, 2.385, 3.077, 2.598])
+mean_redshift = 1
 
 lum_dist_0 = cosmology.luminosity_distance(0.0037).value
 lum_dist = cosmology.luminosity_distance(mean_redshift).value
 
-print('wave', 164 * (1 + mean_redshift))
+print('wave 1640', 164 * (1 + mean_redshift))
+print('wave 4686', 469 * (1 + mean_redshift))
 print(60 * 60)
 print('lum_dist_0 ', lum_dist_0)
 print('lum_dist ', lum_dist)

@@ -1,51 +1,8 @@
-import os , glob
 import numpy as np
-import pandas as pd
 np.seterr(all='ignore')  # hides irrelevant warnings about divide-by-zero, etc
-
-from pathlib import Path    # handle paths to files
-
 import astropy.units as u
-from astropy.io import fits
-from astropy.table import Table
-from astropy.modeling import models
-from astropy.modeling import fitting
-from astropy.nddata import StdDevUncertainty
-from astropy.nddata import NDData
-from astropy.wcs import WCS
-
-# from specutils import Spectrum1D
-# from specutils import SpectralRegion
-# from specutils.fitting import fit_lines
-# from specutils.fitting import fit_continuum
-# from specutils.manipulation import extract_region
-
-from dust_extinction.parameter_averages import CCM89
-
-# %matplotlib inline
-import matplotlib
-from matplotlib import cm
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
-import matplotlib.patheffects as path_effects
-
-# from specutils.manipulation import (box_smooth, gaussian_smooth, trapezoid_smooth)
 import dust_tools.extinction_tools
-
-
 from dust_extinction.parameter_averages import CCM89, F99, F04, GCC09, F19
-
-# model_ccm89 = CCM89(Rv=3.1)
-# kappa_h_beta = model_ccm89(4862.692*1e-4*u.micron) * 3.1
-# kappa_h_gamma = model_ccm89(4341.692*1e-4*u.micron) * 3.1
-# h_gamma_over_h_beta = 0.469
-# print((-2.5 / (kappa_h_beta - kappa_h_gamma)))
-#
-# exit()
-
-# e_b_v = (-2.5 / (kappa_h_beta - kappa_h_gamma)) * np.log10(h_gamma_over_h_beta / (flux_h_gamma_4342 / flux_h_beta_4863))
-
-
 
 
 def k_lambda(wavelength, law='R15'):

@@ -218,6 +218,82 @@ ebv_uv_tol89a, ebv_uv_err_tol89a, ebv_heii_tol89a, ebv_heii_err_tol89a = get_ebv
 ebv_balmer_tol89 = 0.07
 ebv_balmer_err_tol89 = 0.01
 
+list_uv = [ebv_uv_he210a, ebv_uv_he210b, ebv_uv_he210c, ebv_uv_he210d,
+           ebv_uv_mrk33b,
+           ebv_uv_ngc3049a,
+           ebv_uv_ngc3125a,
+           ebv_uv_ngc4214a,
+           ebv_uv_ngc4670a,
+           ebv_uv_tol1924a,
+           ebv_uv_tol89a]
+
+list_heii = [ebv_heii_he210a, ebv_heii_he210b, ebv_heii_he210c, ebv_heii_he210d,
+             ebv_heii_mrk33b,
+             ebv_heii_ngc3049a,
+             ebv_heii_ngc3125a,
+             ebv_heii_ngc4214a,
+             ebv_heii_ngc4670a,
+             ebv_heii_tol1924a,
+             ebv_heii_tol89a]
+
+list_balmer = [ebv_balmer_he210a[0], ebv_balmer_he210b[0], ebv_balmer_he210c[0], ebv_balmer_he210d[0],
+               ebv_balmer_mrk33,
+               ebv_balmer_ngc3049,
+               ebv_balmer_ngc3125[0],
+               ebv_balmer_ngc4214[0],
+               ebv_balmer_ngc4670,
+               ebv_balmer_tol1924[0],
+               ebv_balmer_tol89]
+
+print('With ngc3125')
+print('Mean E(B-V) HeII', '%.3f' % np.mean(np.array(list_heii)),' +/- ', '%.3f' % np.std(np.array(list_heii)))
+print('Mean E(B-V) Balmer', '%.3f' % np.mean(np.array(list_balmer)),' +/- ', '%.3f' % np.std(np.array(list_balmer)))
+print('Mean E(B-V) UV', '%.3f' % np.mean(np.array(list_uv)),' +/- ', '%.3f' % np.std(np.array(list_uv)))
+
+print('correl heii vs balmer %.3f' % (np.corrcoef(x=np.array(list_heii), y=np.array(list_balmer))[0, 1]))
+print('correl uv vs balmer %.3f' % (np.corrcoef(x=np.array(list_uv), y=np.array(list_balmer))[0, 1]))
+print('correl uv vs heii %.3f' % (np.corrcoef(x=np.array(list_uv), y=np.array(list_heii))[0, 1]))
+
+
+
+
+list_uv = [ebv_uv_he210a, ebv_uv_he210b, ebv_uv_he210c, ebv_uv_he210d,
+           ebv_uv_mrk33b,
+           ebv_uv_ngc3049a,
+           #ebv_uv_ngc3125a,
+           ebv_uv_ngc4214a,
+           ebv_uv_ngc4670a,
+           ebv_uv_tol1924a,
+           ebv_uv_tol89a]
+
+list_heii = [ebv_heii_he210a, ebv_heii_he210b, ebv_heii_he210c, ebv_heii_he210d,
+             ebv_heii_mrk33b,
+             ebv_heii_ngc3049a,
+             #ebv_heii_ngc3125a,
+             ebv_heii_ngc4214a,
+             ebv_heii_ngc4670a,
+             ebv_heii_tol1924a,
+             ebv_heii_tol89a]
+
+list_balmer = [ebv_balmer_he210a[0], ebv_balmer_he210b[0], ebv_balmer_he210c[0], ebv_balmer_he210d[0],
+               ebv_balmer_mrk33,
+               ebv_balmer_ngc3049,
+               #ebv_balmer_ngc3125[0],
+               ebv_balmer_ngc4214[0],
+               ebv_balmer_ngc4670,
+               ebv_balmer_tol1924[0],
+               ebv_balmer_tol89]
+
+print('Without ngc3125')
+print('Mean E(B-V) HeII', '%.3f' % np.mean(np.array(list_heii)),' +/- ', '%.3f' % np.std(np.array(list_heii)))
+print('Mean E(B-V) Balmer', '%.3f' % np.mean(np.array(list_balmer)),' +/- ', '%.3f' % np.std(np.array(list_balmer)))
+print('Mean E(B-V) UV', '%.3f' % np.mean(np.array(list_uv)),' +/- ', '%.3f' % np.std(np.array(list_uv)))
+
+print('correl heii vs balmer %.3f' % (np.corrcoef(x=np.array(list_heii), y=np.array(list_balmer))[0, 1]))
+print('correl uv vs balmer %.3f' % (np.corrcoef(x=np.array(list_uv), y=np.array(list_balmer))[0, 1]))
+print('correl uv vs heii %.3f' % (np.corrcoef(x=np.array(list_uv), y=np.array(list_heii))[0, 1]))
+
+
 figure = plt.figure(figsize=(25, 20))
 fontsize = 28
 ax_balmer_heii = figure.add_axes([0.065, 0.53, 0.465, 0.465])
@@ -496,8 +572,6 @@ ax_blank_2.legend(frameon=False, loc=3, bbox_to_anchor=[0.25, 0.1], fontsize=fon
 
 dummy_x_data = np.linspace(-0.1, 0.5)
 dummy_y_data = 1 * dummy_x_data
-print('dummy_x_data ', dummy_x_data)
-print('dummy_y_data ', dummy_y_data)
 ax_balmer_heii.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=3)
 ax_balmer_uv.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=3)
 ax_heii_uv.plot(dummy_x_data, dummy_y_data, linestyle='--', color='k', linewidth=3)

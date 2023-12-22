@@ -18,9 +18,9 @@ from specutils.manipulation import extract_region
 
 from dust_extinction.parameter_averages import CCM89
 
-import matplotlib.pyplot as plt
-
 from specutils.manipulation import gaussian_smooth
+
+np.random.seed(12344)
 
 
 path = '/home/benutzer/Documents/projects/dust_analysis_old/heII/data/extracted_spec'
@@ -309,7 +309,7 @@ class _specData:
                                 "Y": Y[sel_sum],
                                 "E": E[sel_sum]}
 
-                nsim = 1000
+                nsim = 10000
                 line_sum_all = []
                 for ss in range(nsim):
                     xx = fit_sum_pars["X"]
